@@ -1,4 +1,5 @@
 import re
+import json
 
 
 __version__ = '1.2'
@@ -6,7 +7,7 @@ __version__ = '1.2'
 
 _godot_node = re.compile(r'^\[node name="([^"]+)" (?:type="([^"]+)")?')
 _godot_property_str = re.compile(
-    r'^([A-Za-z0-9_]+)\s*=\s*([\["].+)\Z',
+    r'^([A-Za-z0-9_]+)\s*=\s*([\["\{}].+)\Z',
     re.DOTALL,
 )
 
@@ -82,6 +83,40 @@ class ArrayReader(object):
 
     def get_result(self):
         return self.result
+
+class JSONReader(object):
+    def __init__(self, lineno, key):
+        self.result = ""
+        self.brackets = 1 # first bracket is skipped?
+        self.lineno = lineno
+        self.key = key
+    
+    def parse_line(self, string):
+        formatted = string.replace('(', '[').replace(')', ']').replace('PoolStringArray', '')
+
+        self.result += formatted
+        self.lineno += 1
+
+        self.brackets += string.count('{')
+        self.brackets -= string.count('}')
+
+        if self.brackets == 0:
+            return string[string.rfind('}') + 1:]
+
+        return None
+
+    def _finditem(self, obj, key, result):
+        for k, v in obj.items():
+            if k == key:
+                result.append(v)
+            elif isinstance(v,dict):
+                result.extend(self._finditem(v, key, result))
+        return result
+
+    def get_result(self):
+        result = json.loads("{" + self.result)
+        found = self._finditem(result, self.key, [])
+        return [(x, self.lineno) for x in found]
 
 
 def extract_godot_scene(fileobj, keywords, comment_tags, options):
@@ -188,11 +223,13 @@ def extract_godot_resource(fileobj, keywords, comment_tags, options):
     properties_to_translate = {}
     for keyword in keywords:
         if keyword.startswith('Resource/'):
-            properties_to_translate[keyword[9:]] = keyword
+            key = keyword[9:]
+            key = key[0:key.index('/')]
+            properties_to_translate[key] = keyword
 
     def check_translate_property(property):
         return properties_to_translate.get(property)
-
+    
     current_value = keyword = None
 
     for lineno, line in enumerate(fileobj, start=1):
@@ -226,6 +263,9 @@ def extract_godot_resource(fileobj, keywords, comment_tags, options):
             if keyword:
                 if value[0:1] == '[':
                     current_value = ArrayReader(lineno)
+                elif value[0:1] == '{':
+                    json_key = keyword[keyword.rfind('/') + 1:]
+                    current_value = JSONReader(lineno, json_key)
                 else:
                     current_value = StringReader(lineno)
                 remainder = current_value.parse_line(value[1:])
@@ -237,3 +277,4 @@ def extract_godot_resource(fileobj, keywords, comment_tags, options):
                     current_value = None
                 else:
                     raise ValueError("Trailing data after string")
+
