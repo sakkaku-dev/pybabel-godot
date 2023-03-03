@@ -1,5 +1,7 @@
 import re
-from src.json_reader import JSONReader
+from src.reader.json_reader import JSONReader
+from src.reader.array_reader import ArrayReader
+from src.reader.string_reader import StringReader
 
 
 __version__ = '1.2'
@@ -10,75 +12,6 @@ _godot_property_str = re.compile(
     r'^([A-Za-z0-9_]+)\s*=\s*([\["\{}].+)\Z',
     re.DOTALL,
 )
-
-
-class StringReader(object):
-    def __init__(self):
-        self.result = []
-
-    def parse_line(self, string):
-        escaped = False
-        for i, c in enumerate(string):
-            if escaped:
-                if c == '\\':
-                    self.result.append('\\')
-                elif c == 'n':
-                    self.result.append('\n')
-                elif c == 't':
-                    self.result.append('\t')
-                else:
-                    self.result.append(c)
-                escaped = False
-            else:
-                if c == '\\':
-                    escaped = True
-                elif c == '"':
-                    return string[i + 1:]
-                else:
-                    self.result.append(c)
-        return None
-
-    def get_result(self):
-        return [''.join(self.result)]
-
-
-class ArrayReader(object):
-    def __init__(self):
-        self.result = []
-        self.string = None
-
-    def parse_line(self, string):
-
-        if self.string is not None:
-            remainder = self.string.parse_line(string)
-            if remainder is None:
-                return None
-            self.result.extend(self.string.get_result())
-            string = remainder
-            self.string = None
-
-        i = 0
-        while i < len(string):
-            c = string[i]
-            if c == ']':
-                return string[i + 1:]
-            elif c == '"':
-                self.string = StringReader()
-                remainder = self.string.parse_line(string[i + 1:])
-                if remainder is None:
-                    return None
-                else:
-                    self.result.extend(self.string.get_result())
-                    string = remainder
-                    self.string = None
-                    i = 0
-            else:
-                i = i + 1
-
-        raise ValueError("Unterminated array")
-
-    def get_result(self):
-        return self.result
 
 
 def extract_godot_scene(fileobj, keywords, comment_tags, options):

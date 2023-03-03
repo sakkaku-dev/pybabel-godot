@@ -1,5 +1,5 @@
 from unittest import TestCase, main
-from babel_godot import StringReader
+from string_reader import StringReader
 
 
 class TestStringReader(TestCase):

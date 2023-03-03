@@ -4,7 +4,7 @@ import json
 class JSONReader(object):
     def __init__(self, key):
         self.result = ""
-        self.brackets = 0  # first bracket is skipped?
+        self.brackets = 1  # first bracket is skipped?
         self.key = key
 
     def parse_line(self, string):
@@ -31,5 +31,5 @@ class JSONReader(object):
         return result
 
     def get_result(self):
-        result = json.loads(self.result)
+        result = json.loads("{" + self.result)
         return self._finditem(result, self.key)
