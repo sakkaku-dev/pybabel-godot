@@ -2,9 +2,14 @@ import re
 
 _godot_node = re.compile(r'^\[node name="([^"]+)" (?:type="([^"]+)")?')
 _godot_property_str = re.compile(
-    r'^([A-Za-z0-9_]+)\s*=\s*([\["\{}].+)\Z',
+    r'^([A-Za-z0-9_/]+)\s*=\s*([\["\{}].+)\Z',
     re.DOTALL,
 )
+
+_godot_valid_str = re.compile(r'.*[A-Za-z]+.*')
+_godot_special_ignore = re.compile(r'^[_]+.*[_]+$')
+
+NODE_SEPARATOR = '#'
 
 
 class KeywordMatcher:
@@ -13,18 +18,27 @@ class KeywordMatcher:
         self.properties_to_translate = {}
 
         for keyword in keywords:
-            if '/' in keyword:
+            if NODE_SEPARATOR in keyword:
                 self.properties_to_translate[tuple(
-                    keyword.split('/', 1))] = keyword
+                    keyword.split(NODE_SEPARATOR, 1))] = keyword
             else:
                 self.properties_to_translate[(None, keyword)] = keyword
 
-    def check_translate_property(self, property):
-        keyword = self.properties_to_translate.get(
-            (self.current_node, property))
-        if keyword is None:
-            keyword = self.properties_to_translate.get((None, property))
-        return keyword
+    def _check_translate_property(self, property):
+        for node, keyword in self.properties_to_translate:
+            if node == self.current_node or node == None:
+                if self._match_property_and_keyword(property, keyword):
+                    return self.properties_to_translate[(node, keyword)]
+        return None
+
+    def _match_property_and_keyword(self, prop, keyword):
+        if keyword.startswith('*'):
+            return prop.endswith(keyword[1:])
+
+        if keyword.endswith('*'):
+            return prop.startswith(keyword[:-1])
+
+        return prop == keyword
 
     def parse_and_match_with_node(self, line: str) -> tuple[str]:
         match = _godot_node.match(line)
@@ -47,7 +61,15 @@ class KeywordMatcher:
         if match:
             property = match.group(1)
             value = match.group(2)
-            keyword = self.check_translate_property(property)
-            if keyword:
-                return keyword, value
+
+            if self._is_valid_string_value(value):
+                keyword = self._check_translate_property(property)
+                if keyword:
+                    return keyword, value
         return None, None
+
+    def _is_valid_string_value(self, value):
+        valid = _godot_valid_str.match(value)
+        if valid:
+            return not _godot_special_ignore.match(value.replace('"', ''))
+        return False

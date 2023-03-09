@@ -1,4 +1,5 @@
-from string_reader import StringReader
+from src.reader.string_reader import StringReader
+
 
 class ArrayReader(object):
     def __init__(self):
@@ -37,4 +38,3 @@ class ArrayReader(object):
 
     def get_result(self):
         return self.result
-

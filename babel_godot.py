@@ -44,7 +44,7 @@ def extract_godot_scene(fileobj, keywords, comment_tags, options):
                 current_value = None
             continue
 
-        keyword, value = matcher.parse_and_match(line)
+        keyword, value = matcher.parse_and_match_with_node(line)
         if keyword:
             if value[0:1] == '[':
                 current_value = ArrayReader()
