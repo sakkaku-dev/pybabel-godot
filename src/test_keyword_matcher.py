@@ -55,6 +55,11 @@ class TestKeywordMatcher(TestCase):
         _, text = matcher.parse_and_match_property('items/0/text = "Hello"')
         self.assertEqual(text, '"Hello"')
 
+    def test_match_property_name_containing(self):
+        matcher = KeywordMatcher(['*/text*'])
+        _, text = matcher.parse_and_match_property('items/0/text_1 = "Hello"')
+        self.assertEqual(text, '"Hello"')
+
     def test_match_only_string(self):
         matcher = KeywordMatcher(['text'])
         _, text = matcher.parse_and_match_property('text = 10')

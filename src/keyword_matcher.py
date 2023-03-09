@@ -32,11 +32,15 @@ class KeywordMatcher:
         return None
 
     def _match_property_and_keyword(self, prop, keyword):
+        if keyword.startswith('*') and keyword.endswith('*'):
+            return keyword[1:-1] in prop
+
         if keyword.startswith('*'):
             return prop.endswith(keyword[1:])
 
         if keyword.endswith('*'):
             return prop.startswith(keyword[:-1])
+
 
         return prop == keyword
 
