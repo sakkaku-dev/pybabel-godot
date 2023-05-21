@@ -45,6 +45,12 @@ class TestKeywordMatcher(TestCase):
         _, text = matcher.parse_and_match_property('text = "PLAYER_NAME"')
         self.assertEqual(text, '"PLAYER_NAME"')
 
+    def test_match_property_array_type(self):
+        matcher = KeywordMatcher(['actions'])
+        _, text = matcher.parse_and_match_property(
+            'actions = Array[String](["up", "down"])')
+        self.assertEqual(text, '["up", "down"]')
+
     def test_match_last_property_name(self):
         matcher = KeywordMatcher(['*/text'])
         _, text = matcher.parse_and_match_property('items/0/text = "Hello"')

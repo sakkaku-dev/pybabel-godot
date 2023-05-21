@@ -2,7 +2,7 @@ import re
 
 _godot_node = re.compile(r'^\[node name="([^"]+)" (?:type="([^"]+)")?')
 _godot_property_str = re.compile(
-    r'^([A-Za-z0-9_/]+)\s*=\s*([\["\{}].+)\Z',
+    r'^([A-Za-z0-9_/]+)\s*=\s*(Array\[String\]\()?([\["\{][^\)]+)(\))?\Z',
     re.DOTALL,
 )
 
@@ -41,7 +41,6 @@ class KeywordMatcher:
         if keyword.endswith('*'):
             return prop.startswith(keyword[:-1])
 
-
         return prop == keyword
 
     def parse_and_match_with_node(self, line: str) -> tuple[str]:
@@ -64,7 +63,7 @@ class KeywordMatcher:
         match = _godot_property_str.match(line)
         if match:
             property = match.group(1)
-            value = match.group(2)
+            value = match.group(3)
 
             if self._is_valid_string_value(value):
                 keyword = self._check_translate_property(property)

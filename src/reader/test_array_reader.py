@@ -3,9 +3,9 @@ from array_reader import ArrayReader
 
 
 class TestArrayReader(TestCase):
-    def test_join_lines(self):
+    def test_parse_array(self):
         reader = ArrayReader()
-        reader.parse_line('"Hello", "World"]')
+        reader.parse_line('["Hello", "World"]')
         self.assertEqual(reader.get_result(), ["Hello", "World"])
 
 

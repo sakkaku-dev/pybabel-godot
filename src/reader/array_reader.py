@@ -1,13 +1,11 @@
 from src.reader.string_reader import StringReader
 
-
 class ArrayReader(object):
     def __init__(self):
         self.result = []
         self.string = None
 
     def parse_line(self, string):
-
         if self.string is not None:
             remainder = self.string.parse_line(string)
             if remainder is None:
