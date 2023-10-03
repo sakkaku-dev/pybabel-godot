@@ -38,6 +38,12 @@ class TestKeywordMatcher(TestCase):
         _, text = matcher.parse_and_match_with_node('items/0/text = "Hello"')
         self.assertEqual(text, '"Hello"')
 
+    def test_match_property_without_node_type(self):
+        matcher = KeywordMatcher(['text'])
+        matcher.parse_and_match_with_node('[node name="Name"]')
+        _, text = matcher.parse_and_match_with_node('text = "Hello"')
+        self.assertEqual(text, '"Hello"')
+
     # Property
 
     def test_match_property(self):
