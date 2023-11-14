@@ -1,4 +1,20 @@
-# Custom Extended
+# Babel Godot plugin (forked)
+
+## Installation
+
+Install dependencies: `pip install Babel`
+
+Install this local module: `pip install -e .`
+
+## Usage
+
+See [README.rst] (./README.rst)
+
+## Changes of this fork
+
+- Support arrays with different types
+- Support recursive json keys
+- Improved [keyword matching](#matchers)
 
 ## Matchers
 
